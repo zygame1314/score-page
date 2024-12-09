@@ -33,19 +33,34 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
 async function getAllFiles(path = '/papers') {
     let allFiles = [];
-    let response = await fetch(`/api/papers?path=${encodeURIComponent(path)}`);
-    let data = await response.json();
+    let iter = null;
 
-    if (!data || !data.files) {
-        return [];
-    }
+    do {
+        const params = new URLSearchParams({ path });
+        if (iter) {
+            params.append('iter', iter);
+        }
 
-    data.files = data.files.map(file => ({
-        ...file,
-        fullPath: path + '/' + file.name
-    }));
+        const response = await fetch(`/api/papers?${params}`);
+        const data = await response.json();
 
-    return data.files;
+        if (!data || !data.files) {
+            break;
+        }
+
+        // 添加完整路径
+        const files = data.files.map(file => ({
+            ...file,
+            fullPath: path + '/' + file.name
+        }));
+
+        allFiles = allFiles.concat(files);
+        iter = data.next; // 获取下一页标记
+
+    } while (iter); // 当有下一页时继续
+
+    console.log(`Path ${path} got files:`, allFiles);
+    return allFiles;
 }
 
 const structureCache = new Map();
