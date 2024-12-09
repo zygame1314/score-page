@@ -10,11 +10,6 @@ export default async function handler(req, res) {
         return;
     }
 
-    if (req.method !== 'POST') {
-        res.status(405).json({ message: '不支持的请求方法' });
-        return;
-    }
-
     const { username, password } = req.body || {};
     if (!username || !password) {
         res.status(400).json({ message: '缺少必要参数' });
