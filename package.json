@@ -2,12 +2,7 @@
     "name": "grading-system",
     "version": "1.0.0",
     "type": "module",
-    "scripts": {
-        "build": "mkdir -p public && cp -r index.html css js public/",
-        "generate-index": "node api/generate-index.js"
-    },
     "dependencies": {
-        "upyun": "^3.4.4",
-        "@vercel/cron": "^0.0.1"
+        "upyun": "^3.4.4"
     }
 }
