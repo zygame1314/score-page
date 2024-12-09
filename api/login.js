@@ -1,4 +1,4 @@
-import { verify } from './utils/auth';
+import { verify } from './utils/auth.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {

@@ -1,4 +1,4 @@
-const UPYUN = require('upyun');
+import UPYUN from 'upyun';
 
 const upyun = new UPYUN.Service({
     serviceName: process.env.UPYUN_SERVICE_NAME,
@@ -9,7 +9,6 @@ const upyun = new UPYUN.Service({
 export async function verify(username, password) {
     try {
         const client = new UPYUN.Client(upyun);
-
         const result = await client.getFile('/users.json');
         const users = JSON.parse(result.toString());
 
