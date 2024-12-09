@@ -28,39 +28,37 @@ async function listDirectoryWithIter(path, iter = null) {
 }
 
 export default async function handler(req, res) {
-    if (req.method !== 'GET') {
-        return res.status(405).json({ message: '方法不允许' });
-    }
+    if (req.method === 'GET') {
+        try {
+            validateToken(req);
 
-    try {
-        validateToken(req);
+            if (req.query.id) {
+                const filePath = '/papers/' + req.query.id;
+                const fileUrl = await client.getSignedUrl(filePath);
 
-        if (req.query.id) {
-            const sanitizedId = req.query.id.replace(/\.\.|\//g, '');
-            const filePath = `/papers/${sanitizedId}`;
-            const fileUrl = await client.getSignedUrl(filePath);
+                res.status(200).json({
+                    id: req.query.id,
+                    title: req.query.id.split('/').pop(),
+                    fileUrl
+                });
+            } else {
+                const path = req.query.path ? `/papers/${req.query.path}` : '/papers';
+                const response = await listDirectoryWithIter(path);
+                res.status(200).json({
+                    files: response.files || []
+                });
+            }
+        } catch (error) {
+            console.error('API错误:', error);
 
-            res.status(200).json({
-                id: sanitizedId,
-                title: sanitizedId.split('/').pop(),
-                fileUrl
+            if (error.message === '未授权访问') {
+                return res.status(401).json({ message: error.message });
+            }
+
+            res.status(500).json({
+                message: '获取试卷信息失败',
+                error: error.message
             });
-        } else {
-            const sanitizedPath = req.query.path?.replace(/\.\.|\//g, '') || '';
-            const path = `/papers/${sanitizedPath}`.replace(/\/+/g, '/');
-            const response = await listDirectoryWithIter(path);
-            res.status(200).json(response);
         }
-    } catch (error) {
-        console.error('API错误:', error);
-
-        if (error.message === '未授权访问') {
-            return res.status(401).json({ message: error.message });
-        }
-
-        res.status(500).json({
-            message: '获取试卷信息失败',
-            error: error.message
-        });
     }
 }
