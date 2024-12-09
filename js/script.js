@@ -32,7 +32,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
 async function loadPapers() {
     try {
-        const response = await fetch(`${API_URL}/papers`);
+        const response = await fetch('/api/papers');
         const papers = await response.json();
 
         const paperList = document.querySelector('.paper-list');
@@ -67,7 +67,7 @@ async function loadPapers() {
 
 async function loadPaper(paperId) {
     try {
-        const response = await fetch(`${API_URL}/papers?id=${paperId}`);
+        const response = await fetch(`/api/papers?id=${paperId}`);
         const paper = await response.json();
 
         const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(paper.fileUrl)}`;
