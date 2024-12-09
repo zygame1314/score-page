@@ -6,6 +6,18 @@ const upyun = new UPYUN.Service({
     password: process.env.UPYUN_OPERATOR_PASSWORD
 });
 
+export async function testConnection() {
+    try {
+        const client = new UPYUN.Client(upyun);
+        const files = await client.listDir('/');
+        console.log('目录列表:', files);
+        return true;
+    } catch (error) {
+        console.error('连接测试失败:', error);
+        return false;
+    }
+}
+
 export async function verify(username, password) {
     try {
         const client = new UPYUN.Client(upyun);
