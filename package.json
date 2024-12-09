@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
+        "build": "mkdir -p public && cp -r index.html css js public/",
         "generate-index": "node api/generate-index.js"
     },
     "dependencies": {
