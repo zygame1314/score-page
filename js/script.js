@@ -30,7 +30,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
 async function loadPapers() {
     try {
-        const response = await fetch(`${API_URL}/api/papers`);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/papers`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         const subjects = await response.json();
 
         const paperList = document.querySelector('.paper-list');
@@ -58,7 +63,12 @@ async function loadFolder(element, path) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/papers?path=${encodeURIComponent(path)}`);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/papers?path=${encodeURIComponent(path)}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         const data = await response.json();
 
         let html = '';
@@ -86,7 +96,12 @@ async function loadFolder(element, path) {
 
 async function loadPaper(paperId) {
     try {
-        const response = await fetch(`${API_URL}/api/papers?id=${paperId}`);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/papers?id=${paperId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         const paper = await response.json();
 
         const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(paper.fileUrl)}`;
