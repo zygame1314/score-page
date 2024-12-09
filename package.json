@@ -2,10 +2,16 @@
     "name": "grading-system",
     "version": "1.0.0",
     "type": "module",
+    "private": true,
     "scripts": {
-        "generate-index": "node scripts/generate-index.js"
+        "dev": "vercel dev",
+        "build": "node api/generate-index.js",
+        "generate-index": "node api/generate-index.js"
     },
     "dependencies": {
         "upyun": "^3.4.4"
+    },
+    "devDependencies": {
+        "vercel": "^32.0.0"
     }
 }

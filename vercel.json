@@ -1,0 +1,16 @@
+{
+    "version": 2,
+    "buildCommand": "npm run build",
+    "framework": null,
+    "functions": {
+        "api/*.js": {
+            "memory": 1024
+        }
+    },
+    "crons": [
+        {
+            "path": "/api/generate-index",
+            "schedule": "0 0 * * *"
+        }
+    ]
+}
