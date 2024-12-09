@@ -1,3 +1,25 @@
+import UPYUN from 'upyun';
+
+const service = new UPYUN.Service(
+    process.env.UPYUN_SERVICE_NAME,
+    process.env.UPYUN_OPERATOR_NAME,
+    process.env.UPYUN_OPERATOR_PASSWORD
+);
+
+const client = new UPYUN.Client(service);
+
+async function listDirectoryWithIter(path, iter = null) {
+    const options = {
+        limit: 1000,
+        order: 'asc'
+    };
+    if (iter) {
+        options.iter = iter;
+    }
+
+    return await client.listDir(path, options);
+}
+
 export default async function handler(req, res) {
     if (req.method === 'GET') {
         try {
@@ -10,11 +32,9 @@ export default async function handler(req, res) {
                     fileUrl
                 });
             } else if (req.query.path) {
-                // 返回指定目录的文件列表
                 const response = await listDirectoryWithIter(req.query.path);
                 res.status(200).json(response);
             } else {
-                // 只返回根目录列表
                 const response = await listDirectoryWithIter('/papers');
                 res.status(200).json(response);
             }
