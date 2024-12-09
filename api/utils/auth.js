@@ -1,36 +1,45 @@
 import UPYUN from 'upyun';
 
-// 使用又拍云推荐的初始化方式
-const service = new UPYUN.Service({
+// 修改服务初始化方式
+const service = new UPYUN({
     serviceName: process.env.UPYUN_SERVICE_NAME,
-    operator: process.env.UPYUN_OPERATOR_NAME,  // 注意这里是 operator 而不是 operatorName
-    password: process.env.UPYUN_OPERATOR_PASSWORD
+    operatorName: process.env.UPYUN_OPERATOR_NAME,
+    password: process.env.UPYUN_OPERATOR_PASSWORD,
+    domain: 'v0.api.upyun.com' // 添加 API 域名
 });
 
-const client = new UPYUN.Client(service);
-
-// 添加更详细的测试
 export async function testUpyunConnection() {
     try {
-        console.log('正在测试连接...');
-        console.log('配置信息:', {
-            serviceName: process.env.UPYUN_SERVICE_NAME,
-            operator: process.env.UPYUN_OPERATOR_NAME
-        });
+        console.log('开始测试连接...');
 
-        // 使用 usage 接口测试连接
-        const usage = await client.usage();
-        console.log('存储使用量:', usage);
-
-        // 如果能获取到使用量，说明连接成功
+        // 使用 REST API 方式测试连接
+        const result = await service.listDir('/');
+        console.log('目录列表:', result);
         return true;
     } catch (error) {
-        console.error('连接测试失败:', {
+        console.error('连接测试详细信息:', {
             message: error.message,
             code: error.code,
-            requestId: error?.requestId,
-            detail: error
+            status: error.status,
+            response: error.response
         });
+        return false;
+    }
+}
+
+export async function verify(username, password) {
+    try {
+        // 直接使用 service 实例
+        const result = await service.getFile('/users.json');
+        console.log('获取到的文件内容:', result);
+
+        const users = JSON.parse(result);
+        return users.some(user =>
+            user.username === username &&
+            user.password === password
+        );
+    } catch (error) {
+        console.error('验证失败:', error);
         return false;
     }
 }
