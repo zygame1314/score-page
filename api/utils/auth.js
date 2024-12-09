@@ -10,31 +10,33 @@ const client = new UPYUN.Client(service);
 
 export async function verify(username, password) {
     try {
-        // 获取文件内容
         const result = await client.getFile('/users.json');
         if (!result) {
-            console.error('users.json 不存在');
-            return false;
+            throw new Error('users.json 不存在');
         }
 
-        // 转换Buffer为字符串
-        const jsonString = Buffer.from(result).toString('utf8');
-        console.log('获取到的JSON字符串:', jsonString); // 调试日志
+        // 添加调试输出
+        console.log('原始数据:', result);
+        console.log('数据类型:', typeof result);
+
+        // 如果result是Buffer，转换为字符串
+        const jsonString = Buffer.isBuffer(result) ? result.toString('utf8') : result;
+        console.log('转换后的字符串:', jsonString);
 
         // 尝试解析JSON
-        try {
-            const users = JSON.parse(jsonString);
-            const user = users.find(u =>
-                u.username === username && u.password === password
-            );
-            return !!user;
-        } catch (parseError) {
-            console.error('JSON解析失败:', parseError);
-            console.error('原始数据:', jsonString);
-            return false;
-        }
+        const users = JSON.parse(jsonString);
+
+        const user = users.find(u =>
+            u.username === username && u.password === password
+        );
+
+        return !!user;
     } catch (error) {
-        console.error('验证失败:', error);
+        console.error('验证失败:', {
+            message: error.message,
+            stack: error.stack,
+            data: result
+        });
         return false;
     }
 }
