@@ -8,12 +8,39 @@ const service = new UPYUN.Service(
 
 const client = new UPYUN.Client(service);
 
+async function listDirectoryWithIter(path, iter = null) {
+    const options = {
+        limit: 1000,
+        order: 'asc'
+    };
+    if (iter) {
+        options.iter = iter;
+    }
+
+    return await client.listDir(path, options);
+}
+
 async function listDirectory(path) {
     try {
-        const files = await client.listDir(path);
+        let allFiles = [];
+        let response = await listDirectoryWithIter(path);
+
+        if (!response || !response.files) {
+            return { files: [] };
+        }
+
+        allFiles = allFiles.concat(response.files);
+
+        while (response && response.next) {
+            response = await listDirectoryWithIter(path, response.next);
+            if (response && response.files) {
+                allFiles = allFiles.concat(response.files);
+            }
+        }
+
         const result = {};
 
-        for (const item of files) {
+        for (const item of allFiles) {
             if (item.type === 'F') {
                 const subPath = path + '/' + item.name;
                 result[item.name] = await listDirectory(subPath);
@@ -29,7 +56,7 @@ async function listDirectory(path) {
         return result;
     } catch (error) {
         console.error(`列出目录 ${path} 失败:`, error);
-        throw error;
+        return { files: [] };
     }
 }
 
