@@ -4,7 +4,6 @@
     "type": "module",
     "private": true,
     "scripts": {
-        "dev": "vercel dev",
         "build": "node api/generate-index.js",
         "generate-index": "node api/generate-index.js"
     },
