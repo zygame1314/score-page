@@ -10,7 +10,7 @@ const client = new UPYUN.Client(service);
 
 async function listDirectoryWithIter(path, iter = null) {
     const options = {
-        limit: 1000,
+        limit: 100,
         order: 'asc'
     };
     if (iter) {
@@ -26,16 +26,15 @@ export default async function handler(req, res) {
             if (req.query.id) {
                 const filePath = '/papers/' + req.query.id;
                 const fileUrl = await client.getSignedUrl(filePath);
+
                 res.status(200).json({
                     id: req.query.id,
                     title: req.query.id.split('/').pop(),
                     fileUrl
                 });
-            } else if (req.query.path) {
-                const response = await listDirectoryWithIter(req.query.path);
-                res.status(200).json(response);
             } else {
-                const response = await listDirectoryWithIter('/papers');
+                const path = req.query.path ? `/papers/${req.query.path}` : '/papers';
+                const response = await listDirectoryWithIter(path);
                 res.status(200).json(response);
             }
         } catch (error) {
