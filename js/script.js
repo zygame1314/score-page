@@ -31,7 +31,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
-async function getAllFiles(path) {
+async function getAllFiles(path = '/papers') {
     let allFiles = [];
     let response = await fetch(`/api/papers?path=${encodeURIComponent(path)}`);
     let data = await response.json();
@@ -40,17 +40,12 @@ async function getAllFiles(path) {
         return [];
     }
 
-    allFiles = allFiles.concat(data.files);
+    data.files = data.files.map(file => ({
+        ...file,
+        fullPath: path + '/' + file.name
+    }));
 
-    while (data && data.next) {
-        response = await fetch(`/api/papers?path=${encodeURIComponent(path)}&iter=${data.next}`);
-        data = await response.json();
-        if (data && data.files) {
-            allFiles = allFiles.concat(data.files);
-        }
-    }
-
-    return allFiles;
+    return data.files;
 }
 
 const structureCache = new Map();
@@ -89,21 +84,28 @@ async function loadPapers() {
         const paperList = document.querySelector('.paper-list');
         paperList.innerHTML = '<p>加载中...</p>';
 
-        console.log('开始加载文件结构...');
-        const structure = await buildStructure();
-        console.log('文件结构:', structure);
+        const files = await getAllFiles();
+        console.log('获取到的文件列表:', files);
 
+        // 构建目录树
         const papers = {};
 
-        // 转换数据结构
-        for (const subject in structure) {
-            if (subject === 'files') continue; // 跳过根目录下的文件
-            papers[subject] = {};
-            for (const className in structure[subject]) {
-                if (className === 'files') continue;
-                papers[subject][className] = structure[subject][className].files || [];
-            }
-        }
+        files.forEach(file => {
+            if (file.type === 'F') return; // 跳过文件夹，只处理文件
+
+            const paths = file.fullPath.replace('/papers/', '').split('/');
+            if (paths.length !== 3) return; // 只处理 subject/class/file 结构
+
+            const [subject, className, fileName] = paths;
+
+            if (!papers[subject]) papers[subject] = {};
+            if (!papers[subject][className]) papers[subject][className] = [];
+
+            papers[subject][className].push({
+                id: file.fullPath.replace('/papers/', ''),
+                title: fileName
+            });
+        });
 
         console.log('处理后的数据结构:', papers);
 
@@ -140,8 +142,7 @@ async function loadPapers() {
         paperList.innerHTML = html;
     } catch (error) {
         console.error('加载失败:', error);
-        document.querySelector('.paper-list').innerHTML =
-            '<p>加载试卷列表失败</p>';
+        paperList.innerHTML = '<p>加载试卷列表失败</p>';
     }
 }
 
