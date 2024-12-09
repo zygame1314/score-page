@@ -1,5 +1,4 @@
 const API_URL = window.location.origin;
-let currentPaperId = null;
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -16,8 +15,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (response.ok) {
+            // 保存token到localStorage
             localStorage.setItem('token', data.token);
 
+            // 切换页面
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('gradingPage').classList.remove('hidden');
             loadPapers();
@@ -29,143 +30,68 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
-async function getAllFiles(path = '/papers', recursive = true) {
-    let allFiles = [];
-    let iter = null;
-
-    do {
-        const params = new URLSearchParams({ path });
-        if (iter) {
-            params.append('iter', iter);
-        }
-
-        const response = await fetch(`/api/papers?${params}`);
-        const data = await response.json();
-
-        if (!data || !data.files) {
-            break;
-        }
-
-        // 添加完整路径
-        const files = data.files.map(file => ({
-            ...file,
-            fullPath: path + '/' + file.name
-        }));
-
-        allFiles = allFiles.concat(files);
-        iter = data.next;
-
-    } while (iter);
-
-    // 递归获取子目录内容
-    if (recursive) {
-        for (const file of allFiles) {
-            if (file.type === 'F') {
-                const subFiles = await getAllFiles(file.fullPath, true);
-                allFiles = allFiles.concat(subFiles);
-            }
-        }
-    }
-
-    return allFiles;
-}
-
-const structureCache = new Map();
-
-async function buildStructure(path = '/papers') {
-    console.log('Building structure for:', path);
-
-    if (structureCache.has(path)) {
-        return structureCache.get(path);
-    }
-
-    const files = await getAllFiles(path);
-    console.log('Files received:', files);
-
-    const result = {};
-
-    for (const item of files) {
-        if (item.type === 'F') {
-            const subPath = path + '/' + item.name;
-            result[item.name] = await buildStructure(subPath);
-        } else {
-            if (!result.files) result.files = [];
-            result.files.push({
-                id: path.replace('/papers/', '') + '/' + item.name,
-                title: item.name
-            });
-        }
-    }
-
-    structureCache.set(path, result);
-    return result;
-}
+// ...existing code...
 
 async function loadPapers() {
     try {
+        const response = await fetch('/api/papers');
+        const subjects = await response.json();
+        
         const paperList = document.querySelector('.paper-list');
-        paperList.innerHTML = '<p>加载中...</p>';
-
-        const allFiles = await getAllFiles();
-        console.log('获取到的所有文件:', allFiles);
-
-        const papers = {};
-
-        allFiles.forEach(file => {
-            if (file.type === 'F') return;
-
-            const paths = file.fullPath.replace('/papers/', '').split('/');
-            if (paths.length !== 3) return;
-
-            const [subject, className, fileName] = paths;
-
-            if (!papers[subject]) papers[subject] = {};
-            if (!papers[subject][className]) papers[subject][className] = [];
-
-            papers[subject][className].push({
-                id: file.fullPath.replace('/papers/', ''),
-                title: fileName
-            });
-        });
-
-        console.log('处理后的数据结构:', papers);
-
         let html = '';
-        const isEmpty = Object.keys(papers).length === 0;
-
-        if (isEmpty) {
-            html = '<p>暂无试卷</p>';
-        } else {
-            for (const [subject, classes] of Object.entries(papers)) {
-                html += `<div class="subject-group">
-                    <h3>${subject}</h3>`;
-
-                for (const [className, files] of Object.entries(classes)) {
-                    if (files && files.length > 0) {
-                        html += `<div class="class-group">
-                            <h4>${className}</h4>`;
-
-                        files.forEach(file => {
-                            html += `<div class="paper-item" 
-                                onclick="loadPaper('${file.id}')">
-                                ${file.title}
-                            </div>`;
-                        });
-
-                        html += `</div>`;
-                    }
-                }
-
-                html += `</div>`;
-            }
+        
+        for (const subject of subjects.files) {
+            html += `<div class="subject-group">
+                <h3 class="folder" data-path="${subject.name}" onclick="loadFolder(this, '${subject.name}')">${subject.name}</h3>
+                <div class="folder-content hidden"></div>
+            </div>`;
         }
-
+        
         paperList.innerHTML = html;
     } catch (error) {
-        console.error('加载失败:', error);
-        paperList.innerHTML = '<p>加载试卷列表失败</p>';
+        alert('加载文件夹列表失败');
     }
 }
+
+async function loadFolder(element, path) {
+    const contentDiv = element.nextElementSibling;
+    
+    // 如果已经加载过并且是隐藏状态,直接切换显示
+    if(contentDiv.children.length > 0) {
+        contentDiv.classList.toggle('hidden');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/papers?path=${encodeURIComponent(path)}`);
+        const data = await response.json();
+        
+        let html = '';
+        if(data.files) {
+            for(const item of data.files) {
+                if(item.type === 'F') {
+                    // 是文件夹
+                    html += `<div class="class-group">
+                        <h4 class="folder" onclick="loadFolder(this, '${path}/${item.name}')">${item.name}</h4>
+                        <div class="folder-content hidden"></div>
+                    </div>`;
+                } else {
+                    // 是文件
+                    html += `<div class="paper-item" onclick="loadPaper('${path}/${item.name}')">
+                        ${item.name}
+                    </div>`;
+                }
+            }
+        }
+        
+        contentDiv.innerHTML = html;
+        contentDiv.classList.remove('hidden');
+    } catch (error) {
+        alert('加载文件夹内容失败');
+    }
+}
+
+// ...existing code...
 
 async function loadPaper(paperId) {
     try {
