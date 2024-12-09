@@ -3,9 +3,11 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
+        "build": "mkdir -p public && cp -r css js index.html public/",
         "generate-index": "node api/generate-index.js"
     },
     "dependencies": {
-        "upyun": "^3.4.4"
+        "upyun": "^3.4.4",
+        "@vercel/cron": "^0.0.1"
     }
 }
