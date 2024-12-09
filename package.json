@@ -1,0 +1,7 @@
+{
+    "name": "grading-system",
+    "version": "1.0.0",
+    "dependencies": {
+        "upyun": "^3.4.4"
+    }
+}
