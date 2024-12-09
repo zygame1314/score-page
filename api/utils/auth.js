@@ -1,6 +1,5 @@
 import UPYUN from 'upyun';
 
-// 修改服务初始化方式
 const service = new UPYUN({
     serviceName: process.env.UPYUN_SERVICE_NAME,
     operatorName: process.env.UPYUN_OPERATOR_NAME,
@@ -8,20 +7,28 @@ const service = new UPYUN({
     domain: 'v0.api.upyun.com' // 添加 API 域名
 });
 
+const client = new UPYUN.Client(service);
+
 export async function testUpyunConnection() {
     try {
-        console.log('开始测试连接...');
+        console.log('正在测试连接...');
+        console.log('配置信息:', {
+            serviceName: process.env.UPYUN_SERVICE_NAME,
+            operatorName: process.env.UPYUN_OPERATOR_NAME,
+            hasPassword: !!process.env.UPYUN_OPERATOR_PASSWORD
+        });
 
-        // 使用 REST API 方式测试连接
-        const result = await service.listDir('/');
-        console.log('目录列表:', result);
+        // 使用最简单的操作测试连接
+        const usage = await service.usage();
+        console.log('存储使用情况:', usage);
+
         return true;
     } catch (error) {
-        console.error('连接测试详细信息:', {
+        console.error('连接测试失败:', {
             message: error.message,
             code: error.code,
-            status: error.status,
-            response: error.response
+            response: error.response?.data,
+            headers: error.response?.headers
         });
         return false;
     }
@@ -29,9 +36,8 @@ export async function testUpyunConnection() {
 
 export async function verify(username, password) {
     try {
-        // 直接使用 service 实例
-        const result = await service.getFile('/users.json');
-        console.log('获取到的文件内容:', result);
+        const result = await client.getFile('/users.json');
+        console.log('读取到的用户文件:', result.toString());
 
         const users = JSON.parse(result);
         return users.some(user =>
