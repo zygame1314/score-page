@@ -16,10 +16,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            // 保存token到localStorage
             localStorage.setItem('token', data.token);
 
-            // 切换页面
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('gradingPage').classList.remove('hidden');
             loadPapers();
@@ -31,7 +29,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
-async function getAllFiles(path = '/papers') {
+async function getAllFiles(path = '/papers', recursive = true) {
     let allFiles = [];
     let iter = null;
 
@@ -55,11 +53,20 @@ async function getAllFiles(path = '/papers') {
         }));
 
         allFiles = allFiles.concat(files);
-        iter = data.next; // 获取下一页标记
+        iter = data.next;
 
-    } while (iter); // 当有下一页时继续
+    } while (iter);
 
-    console.log(`Path ${path} got files:`, allFiles);
+    // 递归获取子目录内容
+    if (recursive) {
+        for (const file of allFiles) {
+            if (file.type === 'F') {
+                const subFiles = await getAllFiles(file.fullPath, true);
+                allFiles = allFiles.concat(subFiles);
+            }
+        }
+    }
+
     return allFiles;
 }
 
@@ -99,17 +106,16 @@ async function loadPapers() {
         const paperList = document.querySelector('.paper-list');
         paperList.innerHTML = '<p>加载中...</p>';
 
-        const files = await getAllFiles();
-        console.log('获取到的文件列表:', files);
+        const allFiles = await getAllFiles();
+        console.log('获取到的所有文件:', allFiles);
 
-        // 构建目录树
         const papers = {};
 
-        files.forEach(file => {
-            if (file.type === 'F') return; // 跳过文件夹，只处理文件
+        allFiles.forEach(file => {
+            if (file.type === 'F') return;
 
             const paths = file.fullPath.replace('/papers/', '').split('/');
-            if (paths.length !== 3) return; // 只处理 subject/class/file 结构
+            if (paths.length !== 3) return;
 
             const [subject, className, fileName] = paths;
 
