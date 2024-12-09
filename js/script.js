@@ -30,10 +30,62 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
+async function getAllFiles(path) {
+    let allFiles = [];
+    let response = await fetch(`/api/papers?path=${encodeURIComponent(path)}`);
+    let data = await response.json();
+
+    if (!data || !data.files) {
+        return [];
+    }
+
+    allFiles = allFiles.concat(data.files);
+
+    while (data && data.next) {
+        response = await fetch(`/api/papers?path=${encodeURIComponent(path)}&iter=${data.next}`);
+        data = await response.json();
+        if (data && data.files) {
+            allFiles = allFiles.concat(data.files);
+        }
+    }
+
+    return allFiles;
+}
+
+async function buildStructure(path = '/papers') {
+    const files = await getAllFiles(path);
+    const result = {};
+
+    for (const item of files) {
+        if (item.type === 'F') {
+            const subPath = path + '/' + item.name;
+            result[item.name] = await buildStructure(subPath);
+        } else {
+            if (!result.files) result.files = [];
+            result.files.push({
+                id: path.replace('/papers/', '') + '/' + item.name,
+                title: item.name
+            });
+        }
+    }
+
+    return result;
+}
+
 async function loadPapers() {
     try {
-        const response = await fetch('/api/papers');
-        const papers = await response.json();
+        // 在前端构建目录结构
+        const structure = await buildStructure();
+        const papers = {};
+
+        // 转换数据结构
+        for (const subject in structure) {
+            papers[subject] = {};
+            for (const className in structure[subject]) {
+                if (className === 'files') continue;
+                papers[subject][className] = structure[subject][className].files || [];
+            }
+        }
 
         const paperList = document.querySelector('.paper-list');
         let html = '';
