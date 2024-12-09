@@ -1,4 +1,5 @@
 const API_URL = window.location.origin;
+let currentPaperId = null;
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -52,8 +53,18 @@ async function getAllFiles(path) {
     return allFiles;
 }
 
+const structureCache = new Map();
+
 async function buildStructure(path = '/papers') {
+    console.log('Building structure for:', path);
+
+    if (structureCache.has(path)) {
+        return structureCache.get(path);
+    }
+
     const files = await getAllFiles(path);
+    console.log('Files received:', files);
+
     const result = {};
 
     for (const item of files) {
@@ -69,17 +80,24 @@ async function buildStructure(path = '/papers') {
         }
     }
 
+    structureCache.set(path, result);
     return result;
 }
 
 async function loadPapers() {
     try {
-        // 在前端构建目录结构
+        const paperList = document.querySelector('.paper-list');
+        paperList.innerHTML = '<p>加载中...</p>';
+
+        console.log('开始加载文件结构...');
         const structure = await buildStructure();
+        console.log('文件结构:', structure);
+
         const papers = {};
 
         // 转换数据结构
         for (const subject in structure) {
+            if (subject === 'files') continue; // 跳过根目录下的文件
             papers[subject] = {};
             for (const className in structure[subject]) {
                 if (className === 'files') continue;
@@ -87,33 +105,43 @@ async function loadPapers() {
             }
         }
 
-        const paperList = document.querySelector('.paper-list');
+        console.log('处理后的数据结构:', papers);
+
         let html = '';
+        const isEmpty = Object.keys(papers).length === 0;
 
-        for (const [subject, classes] of Object.entries(papers)) {
-            html += `<div class="subject-group">
-                <h3>${subject}</h3>`;
+        if (isEmpty) {
+            html = '<p>暂无试卷</p>';
+        } else {
+            for (const [subject, classes] of Object.entries(papers)) {
+                html += `<div class="subject-group">
+                    <h3>${subject}</h3>`;
 
-            for (const [className, files] of Object.entries(classes)) {
-                html += `<div class="class-group">
-                    <h4>${className}</h4>`;
+                for (const [className, files] of Object.entries(classes)) {
+                    if (files && files.length > 0) {
+                        html += `<div class="class-group">
+                            <h4>${className}</h4>`;
 
-                files.forEach(file => {
-                    html += `<div class="paper-item" 
-                        onclick="loadPaper('${file.id}')">
-                        ${file.title}
-                    </div>`;
-                });
+                        files.forEach(file => {
+                            html += `<div class="paper-item" 
+                                onclick="loadPaper('${file.id}')">
+                                ${file.title}
+                            </div>`;
+                        });
+
+                        html += `</div>`;
+                    }
+                }
 
                 html += `</div>`;
             }
-
-            html += `</div>`;
         }
 
         paperList.innerHTML = html;
     } catch (error) {
-        alert('加载试卷列表失败');
+        console.error('加载失败:', error);
+        document.querySelector('.paper-list').innerHTML =
+            '<p>加载试卷列表失败</p>';
     }
 }
 
