@@ -3,7 +3,6 @@
     "version": "1.0.0",
     "type": "module",
     "dependencies": {
-        "upyun": "^3.4.4",
-        "jsonwebtoken": "^9.0.0"
+        "upyun": "^3.4.4"
     }
 }
