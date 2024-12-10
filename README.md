@@ -2,7 +2,9 @@
 ```
 改卷网站
 ├─ api
-│  ├─ login.js
+│  ├─ auth
+│  │  ├─ callback.js
+│  │  └─ login.js
 │  ├─ papers.js
 │  ├─ submit-grade.js
 │  └─ utils
@@ -14,6 +16,7 @@
 │  └─ script.js
 ├─ package.json
 ├─ README.md
-└─ users.json
+├─ users.json
+└─ vercel.json
 
 ```

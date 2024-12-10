@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>在线批阅系统</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-
 <body>
     <div id="loginPage" class="page">
         <div class="container">
             <h1>批阅系统登录</h1>
-            <button id="loginBtn">统一认证登录</button>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="用户名" required>
+                <input type="password" id="password" placeholder="密码" required>
+                <button type="submit">登录</button>
+            </form>
         </div>
     </div>
-
+    
     <div id="gradingPage" class="page hidden">
         <header>
             <h2>试卷批阅</h2>
@@ -37,5 +39,4 @@
     </div>
     <script src="/js/script.js"></script>
 </body>
-
 </html>
