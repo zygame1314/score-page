@@ -14,11 +14,15 @@ const service = new UPYUN.Service(
 const client = new UPYUN.Client(service);
 
 function generateSignature(pathname) {
-    const timestamp = Math.floor(Date.now() / 1000) + SIGN_EXPIRE;
+    const etime = Math.floor(Date.now() / 1000) + SIGN_EXPIRE;
     const uri = pathname.replace(/^\//, '');
-    const signStr = `/${uri}?_upt=${timestamp}`;
-    const sign = crypto.createHash('md5').update(signStr + '&' + SIGN_KEY).digest('hex');
-    return `?_upt=${timestamp}&_upd=${sign}`;
+    const signStr = `${SIGN_KEY}&${etime}&/${uri}`;
+    const fullSign = crypto.createHash('md5').update(signStr).digest('hex');
+    const middleStart = Math.floor(fullSign.length / 2) - 4;
+    const sign8 = fullSign.substr(middleStart, 8);
+    const _upt = sign8 + etime;
+
+    return `?_upt=${_upt}`;
 }
 
 const validateToken = (req) => {
