@@ -1,0 +1,21 @@
+.container {
+    max-width: 450px;
+    margin: 80px auto;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.container h1 {
+    margin-bottom: 30px;
+    text-align: center;
+    color: var(--primary-color);
+    font-size: 28px;
+}
+
+#loginForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}

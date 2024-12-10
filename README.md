@@ -2,18 +2,24 @@
 ```
 改卷网站
 ├─ api
-│  ├─ auth
-│  │  ├─ callback.js
-│  │  └─ login.js
+│  ├─ assign-task.js
+│  ├─ login.js
 │  ├─ papers.js
 │  ├─ submit-grade.js
 │  └─ utils
 │     └─ auth.js
 ├─ css
-│  └─ styles.css
+│  ├─ base.css
+│  ├─ grading.css
+│  └─ login.css
 ├─ index.html
 ├─ js
-│  └─ script.js
+│  ├─ auth.js
+│  ├─ config.js
+│  ├─ fileManager.js
+│  ├─ grading.js
+│  ├─ script.js
+│  └─ uiController.js
 ├─ package.json
 ├─ README.md
 ├─ users.json
