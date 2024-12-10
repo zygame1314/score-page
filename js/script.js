@@ -125,6 +125,7 @@ document.getElementById('submitGrade').addEventListener('click', async () => {
     const score = document.getElementById('score').value;
     const comment = document.getElementById('comment').value;
     const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
 
     try {
         const response = await fetch(`${API_URL}/api/submit-grade`, {
@@ -136,7 +137,8 @@ document.getElementById('submitGrade').addEventListener('click', async () => {
             body: JSON.stringify({
                 paperId: currentPaperId,
                 score,
-                comment
+                comment,
+                grader: username
             })
         });
 

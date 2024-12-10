@@ -1,32 +1,35 @@
-import UPYUN from 'upyun';
+import fetch from 'node-fetch';
 
-const service = new UPYUN.Service(
-    process.env.UPYUN_SERVICE_NAME,
-    process.env.UPYUN_OPERATOR_NAME,
-    process.env.UPYUN_OPERATOR_PASSWORD
-);
-
-const client = new UPYUN.Client(service);
+const WHUT_SSO_URL = 'https://zhlgd.whut.edu.cn/tpass/login';
 
 export async function verify(username, password) {
     try {
-        const result = await client.getFile('/users.json');
-        if (!result) {
-            throw new Error('users.json 不存在');
+        const response = await fetch(WHUT_SSO_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                'username': username,
+                'password': password,
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('统一认证平台验证失败');
         }
 
-        const users = Array.isArray(result) ? result : [result];
-
-        const user = users.find(u =>
-            u.username === username && u.password === password
-        );
-
-        return !!user;
+        const data = await response.json();
+        return {
+            isValid: true,
+            studentId: data.studentId,
+            name: data.name,
+            department: data.department
+        };
     } catch (error) {
-        console.error('验证失败:', {
-            message: error.message,
-            stack: error.stack
-        });
-        return false;
+        console.error('验证失败:', error);
+        return {
+            isValid: false
+        };
     }
 }

@@ -13,7 +13,7 @@ const validateToken = (req) => {
     if (!token) {
         throw new Error('未授权访问');
     }
-    return true;
+    return token;
 };
 
 export default async function handler(req, res) {
@@ -27,11 +27,10 @@ export default async function handler(req, res) {
     }
 
     try {
-        validateToken(req);
+        const token = validateToken(req);
+        const { paperId, score, comment, grader } = req.body;
 
-        const { paperId, score, comment } = req.body;
-
-        if (!paperId || !score) {
+        if (!paperId || !score || !grader) {
             return res.status(400).json({ message: '缺少必要参数' });
         }
 
@@ -44,6 +43,8 @@ export default async function handler(req, res) {
             paperId,
             score: scoreNum,
             comment: comment || '',
+            grader,
+            token,
             timestamp: new Date().toISOString()
         };
 
