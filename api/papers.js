@@ -1,5 +1,9 @@
 import UPYUN from 'upyun';
+import crypto from 'crypto';
+
 const UPYUN_DOMAIN = process.env.UPYUN_DOMAIN;
+const SIGN_KEY = process.env.UPYUN_SIGN_KEY;
+const SIGN_EXPIRE = 3600;
 
 const service = new UPYUN.Service(
     process.env.UPYUN_SERVICE_NAME,
@@ -8,6 +12,14 @@ const service = new UPYUN.Service(
 );
 
 const client = new UPYUN.Client(service);
+
+function generateSignature(pathname) {
+    const timestamp = Math.floor(Date.now() / 1000) + SIGN_EXPIRE;
+    const uri = pathname.replace(/^\//, '');
+    const signStr = `/${uri}?_upt=${timestamp}`;
+    const sign = crypto.createHash('md5').update(signStr + '&' + SIGN_KEY).digest('hex');
+    return `?_upt=${timestamp}&_upd=${sign}`;
+}
 
 const validateToken = (req) => {
     const token = req.headers.authorization?.split(' ')[1];
@@ -40,7 +52,8 @@ export default async function handler(req, res) {
 
             if (req.query.id) {
                 const filePath = '/papers/' + req.query.id;
-                const fileUrl = `${UPYUN_DOMAIN}${filePath}`;
+                const signature = generateSignature(filePath);
+                const fileUrl = `${UPYUN_DOMAIN}${filePath}${signature}`;
 
                 res.status(200).json({
                     id: req.query.id,
@@ -56,11 +69,9 @@ export default async function handler(req, res) {
             }
         } catch (error) {
             console.error('API错误:', error);
-
             if (error.message === '未授权访问') {
                 return res.status(401).json({ message: error.message });
             }
-
             res.status(500).json({
                 message: '获取试卷信息失败',
                 error: error.message
