@@ -37,18 +37,28 @@ export default async function handler(req, res) {
             return res.status(400).json({ message: '参数错误' });
         }
 
-        for (const assignee of assignTo) {
-            const taskData = {
-                paperId,
-                assignTo: assignee,
-                assignedBy: userInfo.username,
-                assignedAt: new Date().toISOString(),
-                status: 'pending'
-            };
+        const taskPath = `/tasks/${paperId.replace(/\//g, '_')}.json`;
 
-            const taskPath = `/tasks/${paperId.replace(/\//g, '_')}_${assignee}.json`;
-            await client.putFile(taskPath, Buffer.from(JSON.stringify(taskData)));
+        let existingTask;
+        try {
+            const existingContent = await client.getFile(taskPath);
+            existingTask = JSON.parse(existingContent);
+        } catch (error) {
+            existingTask = { paperId, assignees: [] };
         }
+
+        for (const assignee of assignTo) {
+            if (!existingTask.assignees.some(a => a.username === assignee)) {
+                existingTask.assignees.push({
+                    username: assignee,
+                    assignedBy: userInfo.username,
+                    assignedAt: new Date().toISOString(),
+                    status: 'pending'
+                });
+            }
+        }
+
+        await client.putFile(taskPath, Buffer.from(JSON.stringify(existingTask)));
 
         res.status(200).json({ message: '任务分配成功' });
 
