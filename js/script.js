@@ -127,7 +127,7 @@ document.getElementById('submitGrade').addEventListener('click', async () => {
     const token = localStorage.getItem('token');
 
     try {
-        const response = await fetch(`${API_URL}/submit-grade`, {
+        const response = await fetch(`${API_URL}/api/submit-grade`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
