@@ -1,7 +1,5 @@
 export const WHUT_SSO_URL = 'https://zhlgd.whut.edu.cn/tpass/login';
-export const CALLBACK_URL = process.env.API_URL.startsWith('http')
-    ? `${process.env.API_URL}/api/auth/callback`
-    : `http://${process.env.API_URL}/api/auth/callback`;
+export const CALLBACK_URL = 'http://score-page-iota.vercel.app/api/auth/callback';
 
 export function getLoginUrl() {
     return `${WHUT_SSO_URL}?service=${encodeURIComponent(CALLBACK_URL)}`;
