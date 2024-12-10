@@ -1,31 +1,44 @@
 const API_URL = 'https://score-page-iota.vercel.app';
+let currentPaperId = null;
 
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+window.addEventListener('load', () => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const error = params.get('error');
 
-    try {
-        const response = await fetch(`${API_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            localStorage.setItem('token', data.token);
-
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('gradingPage').classList.remove('hidden');
-            loadPapers();
-        } else {
-            alert(data.message || '登录失败');
+    if (token) {
+        // 登录成功
+        localStorage.setItem('token', token);
+        showGradingPage();
+        // 清除URL中的参数
+        window.history.replaceState({}, '', window.location.pathname);
+    } else if (error) {
+        // 登录失败，显示错误信息
+        let errorMessage = '登录失败';
+        switch (error) {
+            case 'no_ticket':
+                errorMessage = '缺少认证票据';
+                break;
+            case 'invalid_ticket':
+                errorMessage = '认证票据无效';
+                break;
+            case 'server_error':
+                errorMessage = '服务器错误';
+                break;
         }
-    } catch (error) {
-        alert('登录失败，请检查网络连接');
+        alert(errorMessage);
     }
+});
+
+// 显示批阅页面的函数
+function showGradingPage() {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('gradingPage').classList.remove('hidden');
+    loadPapers(); // 加载试卷列表
+}
+
+document.getElementById('loginBtn').addEventListener('click', () => {
+    window.location.href = `${API_URL}/api/auth/login`;
 });
 
 async function loadPapers() {

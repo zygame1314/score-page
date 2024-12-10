@@ -1,22 +1,22 @@
-import fetch from 'node-fetch';
+export const WHUT_SSO_URL = 'https://zhlgd.whut.edu.cn/tpass/login';
+export const CALLBACK_URL = `${process.env.API_URL}/api/auth/callback`;
 
-const WHUT_SSO_URL = 'https://zhlgd.whut.edu.cn/tpass/login';
+export function getLoginUrl() {
+    return `${WHUT_SSO_URL}?service=${encodeURIComponent(CALLBACK_URL)}`;
+}
 
-export async function verify(username, password) {
+export async function verifyTicket(ticket) {
     try {
-        const response = await fetch(WHUT_SSO_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                'username': username,
-                'password': password,
-            })
+        const response = await fetch(`${WHUT_SSO_URL}/serviceValidate`, {
+            method: 'GET',
+            params: {
+                ticket: ticket,
+                service: CALLBACK_URL
+            }
         });
 
         if (!response.ok) {
-            throw new Error('统一认证平台验证失败');
+            throw new Error('验证ticket失败');
         }
 
         const data = await response.json();
@@ -28,8 +28,6 @@ export async function verify(username, password) {
         };
     } catch (error) {
         console.error('验证失败:', error);
-        return {
-            isValid: false
-        };
+        return { isValid: false };
     }
 }
