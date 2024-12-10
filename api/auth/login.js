@@ -1,4 +1,4 @@
-import { getLoginUrl } from '../../../utils/auth';
+import { getLoginUrl } from '../utils/auth';
 
 export default function handler(req, res) {
     const loginUrl = getLoginUrl();
