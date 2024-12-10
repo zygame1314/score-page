@@ -1,4 +1,5 @@
 import UPYUN from 'upyun';
+const UPYUN_DOMAIN = process.env.UPYUN_DOMAIN;
 
 const service = new UPYUN.Service(
     process.env.UPYUN_SERVICE_NAME,
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
 
             if (req.query.id) {
                 const filePath = '/papers/' + req.query.id;
-                const fileUrl = service.getSignatureUrl(filePath);
+                const fileUrl = `${UPYUN_DOMAIN}${filePath}`;
 
                 res.status(200).json({
                     id: req.query.id,
