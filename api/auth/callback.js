@@ -1,4 +1,4 @@
-import { verifyTicket } from '../utils/auth';
+import { verifyTicket } from '../utils/auth.js';
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
