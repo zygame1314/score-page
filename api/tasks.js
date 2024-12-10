@@ -25,8 +25,8 @@ export default async function handler(req, res) {
         }
 
         const userInfo = JSON.parse(Buffer.from(token, 'base64').toString());
+        const paperTasksMap = new Map();
 
-        const tasks = [];
         const list = await client.listDir('/tasks/');
 
         for (const file of list) {
@@ -35,12 +35,37 @@ export default async function handler(req, res) {
                 const task = JSON.parse(taskContent);
 
                 if (userInfo.role === 'admin' || task.assignTo === userInfo.username) {
-                    tasks.push(task);
+                    if (!paperTasksMap.has(task.paperId)) {
+                        paperTasksMap.set(task.paperId, {
+                            paperId: task.paperId,
+                            assignees: [],
+                            assignedAt: task.assignedAt,
+                            currentUserAssigned: false,
+                            currentUserStatus: null
+                        });
+                    }
+
+                    const paperTask = paperTasksMap.get(task.paperId);
+                    paperTask.assignees.push({
+                        username: task.assignTo,
+                        assignedBy: task.assignedBy,
+                        status: task.status
+                    });
+
+                    if (task.assignTo === userInfo.username) {
+                        paperTask.currentUserAssigned = true;
+                        paperTask.currentUserStatus = task.status;
+                    }
                 }
             }
         }
 
-        res.status(200).json(tasks);
+        const consolidatedTasks = Array.from(paperTasksMap.values()).map(task => ({
+            ...task,
+            status: task.currentUserAssigned ? task.currentUserStatus : 'pending'
+        }));
+
+        res.status(200).json(consolidatedTasks);
 
     } catch (error) {
         console.error('获取任务列表错误:', error);
