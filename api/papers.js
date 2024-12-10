@@ -39,7 +39,7 @@ export default async function handler(req, res) {
 
             if (req.query.id) {
                 const filePath = '/papers/' + req.query.id;
-                const fileUrl = await client.getSignedUrl(filePath);
+                const fileUrl = client.getSignedUrlSync(filePath);
 
                 res.status(200).json({
                     id: req.query.id,
