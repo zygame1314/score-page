@@ -13,7 +13,12 @@ const validateToken = (req) => {
     if (!token) {
         throw new Error('未授权访问');
     }
-    return true;
+    try {
+        const userInfo = JSON.parse(Buffer.from(token, 'base64').toString());
+        return userInfo;
+    } catch (error) {
+        throw new Error('无效的 token');
+    }
 };
 
 export default async function handler(req, res) {
@@ -27,7 +32,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        validateToken(req);
+        const userInfo = validateToken(req);
 
         const { paperId, score, comment } = req.body;
 
@@ -44,7 +49,13 @@ export default async function handler(req, res) {
             paperId,
             score: scoreNum,
             comment: comment || '',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            gradedBy: {
+                username: userInfo.username,
+                role: userInfo.role,
+                name: userInfo.name,
+                studentId: userInfo.studentId
+            }
         };
 
         const gradePath = `/grades/${paperId.replace(/\//g, '_')}.json`;

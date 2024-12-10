@@ -18,9 +18,16 @@ export default async function handler(req, res) {
     }
 
     try {
-        const isValid = await verify(username, password);
-        if (isValid) {
-            const token = Math.random().toString(36).substring(7);
+        const user = await verify(username, password);
+        if (user) {
+            const token = Buffer.from(JSON.stringify({
+                username: user.username,
+                role: user.role,
+                name: user.name,
+                studentId: user.studentId,
+                timestamp: Date.now()
+            })).toString('base64');
+
             res.status(200).json({
                 token,
                 message: '登录成功'
