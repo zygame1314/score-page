@@ -33,20 +33,22 @@ export default async function handler(req, res) {
         const userInfo = validateToken(req);
         const { paperId, assignTo } = req.body;
 
-        if (!paperId || !assignTo) {
-            return res.status(400).json({ message: '缺少必要参数' });
+        if (!paperId || !Array.isArray(assignTo) || assignTo.length === 0) {
+            return res.status(400).json({ message: '参数错误' });
         }
 
-        const taskData = {
-            paperId,
-            assignTo,
-            assignedBy: userInfo.username,
-            assignedAt: new Date().toISOString(),
-            status: 'pending'
-        };
+        for (const assignee of assignTo) {
+            const taskData = {
+                paperId,
+                assignTo: assignee,
+                assignedBy: userInfo.username,
+                assignedAt: new Date().toISOString(),
+                status: 'pending'
+            };
 
-        const taskPath = `/tasks/${paperId.replace(/\//g, '_')}.json`;
-        await client.putFile(taskPath, Buffer.from(JSON.stringify(taskData)));
+            const taskPath = `/tasks/${paperId.replace(/\//g, '_')}_${assignee}.json`;
+            await client.putFile(taskPath, Buffer.from(JSON.stringify(taskData)));
+        }
 
         res.status(200).json({ message: '任务分配成功' });
 

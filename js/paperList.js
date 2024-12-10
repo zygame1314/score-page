@@ -1,5 +1,26 @@
+let paperTasks = {};
+
+async function loadPaperTasks() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/tasks`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const tasks = await response.json();
+        paperTasks = tasks.reduce((acc, task) => {
+            acc[task.paperId] = task;
+            return acc;
+        }, {});
+    } catch (error) {
+        console.error('加载任务状态失败', error);
+    }
+}
+
 async function loadPapers() {
     try {
+        await loadPaperTasks();
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/api/papers`, {
             headers: {
@@ -22,6 +43,33 @@ async function loadPapers() {
     } catch (error) {
         alert('加载文件夹列表失败');
     }
+}
+
+function getPaperItemClass(paperPath) {
+    const userInfo = JSON.parse(atob(localStorage.getItem('token')));
+    const task = paperTasks[paperPath];
+
+    if (!task) {
+        return userInfo.role === 'admin' ? '' : 'hidden';
+    }
+
+    if (task.status === 'completed') {
+        return 'completed';
+    }
+
+    if (task.assignTo === userInfo.username) {
+        return 'assigned current-user';
+    }
+
+    return 'assigned';
+}
+
+function canAccessPaper(paperPath) {
+    const userInfo = JSON.parse(atob(localStorage.getItem('token')));
+    if (userInfo.role === 'admin') return true;
+
+    const task = paperTasks[paperPath];
+    return task && task.assignTo === userInfo.username;
 }
 
 async function loadFolder(element, path) {
