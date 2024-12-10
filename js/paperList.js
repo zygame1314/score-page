@@ -9,7 +9,7 @@ async function loadPapers() {
         const subjects = await response.json();
 
         const paperList = document.querySelector('.paper-list');
-        let html = '';
+        let html = showAssignButton();
 
         for (const subject of subjects.files) {
             html += `<div class="subject-group">
